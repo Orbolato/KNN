@@ -8,4 +8,5 @@
 # Complete dataset sample: complete.csv
 # Geological dataset sample: geology.csv
 # For instructions on how to use the programs check the corresponding text file for each R source code
+# R saved workspace: data.RData
 
