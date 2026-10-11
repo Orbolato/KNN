@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the associated paper."
+title: "CPT Soil Classification with KNN and DWNN"
+type: software
+authors:
+  - family-names: Carvalho
+    given-names: Lucas Orbolato
+    orcid: "https://orcid.org/0000-0002-8402-5832"
+  - family-names: Ribeiro
+    given-names: Dimas Betioli
+repository-code: "https://github.com/Orbolato/KNN"
+preferred-citation:
+  type: article
+  title: "Soil Classification System from Cone Penetration Test Data Applying Distance-Based Machine Learning Algorithms"
+  authors:
+    - family-names: Carvalho
+      given-names: Lucas Orbolato
+    - family-names: Ribeiro
+      given-names: Dimas Betioli
+  journal: "Soils and Rocks"
+  volume: 42
+  issue: 2
+  start: 167
+  end: 178
+  year: 2019
+  doi: "10.28927/SR.422167"
