@@ -1,5 +1,10 @@
 #!/usr/bin/env Rscript
 
+# Complementary geological-age analysis for Carvalho & Ribeiro (2019).
+# This entry point reuses the same preprocessing and evaluation pipeline as the
+# main experiment, but restricts the data to the geological subset and compares
+# feature sets with and without the geological-age variable CG.
+
 source(file.path("R", "soil_classification.R"))
 source(file.path("R", "cli.R"))
 
@@ -17,6 +22,9 @@ if (cli_flag(parsed, "help")) {
 
 context <- resolve_context(parsed)
 mode <- analysis_mode(parsed)
+
+# The paper-oriented helper defines the four geological feature sets. Each is
+# evaluated with both the rectangular KNN and Gaussian DWNN kernels.
 feature_sets <- geological_age_feature_sets()
 configurations <- expand.grid(
   kernel = c("rectangular", "gaussian"),
@@ -40,6 +48,7 @@ if (!is.infinite(max_k) && (is.na(max_k) || max_k < 1L)) {
 results <- vector("list", nrow(configurations))
 summary_rows <- vector("list", nrow(configurations))
 
+# MSBTn is the historical output used for this geological-subset comparison.
 for (index in seq_len(nrow(configurations))) {
   config <- configurations[index, ]
   features <- feature_sets[[config$feature_index]]
@@ -71,6 +80,8 @@ for (index in seq_len(nrow(configurations))) {
   )
 }
 
+# Keep run metadata with the saved output so the selected execution mode and
+# balancing settings remain auditable.
 output_dir <- cli_value(parsed, "output-dir", "results")
 metadata <- list(
   analysis = "geological_age",

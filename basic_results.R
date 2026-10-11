@@ -1,5 +1,10 @@
 #!/usr/bin/env Rscript
 
+# Main paper-oriented KNN/DWNN experiment runner for Carvalho & Ribeiro (2019).
+# Scientific preprocessing, balancing, model selection, and evaluation are kept
+# in R/soil_classification.R; this file only defines the experiment grid,
+# validates user-supplied limits, executes each configuration, and saves output.
+
 source(file.path("R", "soil_classification.R"))
 source(file.path("R", "cli.R"))
 
@@ -29,6 +34,9 @@ if (cli_flag(parsed, "help")) {
 
 context <- resolve_context(parsed)
 mode <- analysis_mode(parsed)
+
+# The full grid contains both distance-based classifiers, both soil labels, and
+# every feature combination defined by the paper-oriented core implementation.
 feature_combinations <- main_feature_combinations()
 configurations <- expand.grid(
   kernel = c("rectangular", "gaussian"),
@@ -37,6 +45,7 @@ configurations <- expand.grid(
   stringsAsFactors = FALSE
 )
 
+# Optional limits make smoke tests practical without changing full-run defaults.
 max_configurations <- cli_integer(parsed, "max-configurations", nrow(configurations))
 max_configurations <- min(max_configurations, nrow(configurations))
 if (max_configurations < 1L) stop("--max-configurations must be positive.", call. = FALSE)
@@ -52,6 +61,8 @@ if (!is.infinite(max_k) && (is.na(max_k) || max_k < 1L)) {
 results <- vector("list", nrow(configurations))
 summary_rows <- vector("list", nrow(configurations))
 
+# run_configuration() performs the 10-fold experiment for one classifier,
+# output label, and feature set, including validation-based k selection.
 for (index in seq_len(nrow(configurations))) {
   config <- configurations[index, ]
   features <- feature_combinations[[config$feature_index]]
@@ -89,6 +100,8 @@ for (index in seq_len(nrow(configurations))) {
   )
 }
 
+# Store the execution mode and key runtime parameters alongside the numerical
+# results so later users can distinguish paper-faithful and legacy reruns.
 output_dir <- cli_value(parsed, "output-dir", "results")
 metadata <- list(
   analysis = "main",

@@ -1,5 +1,12 @@
-# Lightweight command-line helpers used by the repository entry points.
+# Command-line helpers shared by the public KNN/DWNN entry points.
+#
+# These functions handle argument parsing, input-workspace selection, execution
+# mode selection, and result serialization. They intentionally contain no
+# classifier logic so that the scientific implementation remains centralized in
+# R/soil_classification.R.
 
+# Parse GNU-style --name value and --name=value options while retaining any
+# positional arguments for forward compatibility.
 parse_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
   options <- list()
   positional <- character()
@@ -33,11 +40,13 @@ parse_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
   list(options = options, positional = positional)
 }
 
+# Return one parsed option or a caller-supplied default.
 cli_value <- function(parsed, name, default = NULL) {
   value <- parsed$options[[name]]
   if (is.null(value)) default else value
 }
 
+# Interpret common textual boolean forms used on the command line.
 cli_flag <- function(parsed, name) {
   value <- parsed$options[[name]]
   if (is.null(value)) return(FALSE)
@@ -45,6 +54,7 @@ cli_flag <- function(parsed, name) {
   tolower(as.character(value)) %in% c("1", "true", "yes", "y", "on")
 }
 
+# Convert an option to an integer and fail early on malformed input.
 cli_integer <- function(parsed, name, default) {
   value <- cli_value(parsed, name, default)
   converted <- suppressWarnings(as.integer(value))
@@ -54,6 +64,10 @@ cli_integer <- function(parsed, name, default) {
   converted
 }
 
+# Resolve the datasets and fold assignments used by an analysis. The archived
+# workspace is preferred because it preserves the historical partition. Fold
+# regeneration is explicit and seeded so a newly generated partition is still
+# reproducible, although it is not assumed to match the archived one.
 resolve_context <- function(parsed) {
   workspace <- cli_value(parsed, "workspace", "data.RData")
   if (file.exists(workspace) && !cli_flag(parsed, "regenerate-folds")) {
@@ -76,6 +90,10 @@ resolve_context <- function(parsed) {
   )
 }
 
+# Translate CLI choices into the two implementation decisions that distinguish
+# the paper-faithful default from the historical 2018 behavior: how the
+# balanced/unbalanced training variant is selected and whether the balancing
+# random-number generator is repeatedly reset.
 analysis_mode <- function(parsed) {
   if (cli_flag(parsed, "legacy")) {
     return(list(
@@ -104,6 +122,8 @@ analysis_mode <- function(parsed) {
   )
 }
 
+# Save both detailed R objects and a compact CSV summary. Metadata travels with
+# the RDS output so reruns retain their execution mode and key parameters.
 write_grid_outputs <- function(results, summary_rows, output_dir, stem, metadata) {
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
   saveRDS(

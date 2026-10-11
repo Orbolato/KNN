@@ -1,5 +1,9 @@
 #!/usr/bin/env Rscript
 
+# Complementary raw-friction-ratio analysis for Carvalho & Ribeiro (2019).
+# It reuses the common paper-oriented pipeline while replacing the normalized
+# friction-ratio input with the archived raw Rf_p feature set.
+
 source(file.path("R", "soil_classification.R"))
 source(file.path("R", "cli.R"))
 
@@ -18,6 +22,9 @@ if (cli_flag(parsed, "help")) {
 context <- resolve_context(parsed)
 mode <- analysis_mode(parsed)
 features <- raw_friction_ratio_feature_set()
+
+# Evaluate the same two distance-based classifiers against both historical soil
+# labels so this complementary run remains directly comparable to the main grid.
 configurations <- expand.grid(
   kernel = c("rectangular", "gaussian"),
   output = c("SBTn", "MSBTn"),
@@ -70,6 +77,8 @@ for (index in seq_len(nrow(configurations))) {
   )
 }
 
+# Save compact summaries plus metadata identifying the execution mode and class-
+# balancing settings used for this rerun.
 output_dir <- cli_value(parsed, "output-dir", "results")
 metadata <- list(
   analysis = "raw_friction_ratio",
